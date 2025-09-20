@@ -1,177 +1,124 @@
-# LinguaFlash
+# 🌍 LinguaFlash  
+**Translation API & UI — Powered by Python 3.13**
 
-**LinguaFlash** is a real-time language translation tool built using FastAPI, Google Gemini 1.5 Flash, Gradio, and Supervisor. This tool leverages advanced AI models to provide fast and accurate translations between various languages.
+![Python](https://img.shields.io/badge/Python-3.13-blue?style=for-the-badge&logo=python)  
+![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-green?style=for-the-badge&logo=fastapi)  
+![Gradio](https://img.shields.io/badge/Gradio-4.44+-orange?style=for-the-badge&logo=gradio)  
+![License](https://img.shields.io/badge/License-MIT-black?style=for-the-badge)
 
-## Features
-- Real-time translation of text to multiple languages.
-- User-friendly interface with Gradio.
-- Scalable and robust architecture using FastAPI and Supervisor.
-- Powered by Google Gemini 1.5 Flash for high-quality translations.
+A minimal, async-ready translation service with:  
+🚀 FastAPI backend for API requests  
+🎨 Gradio frontend for real-time UI  
+⚡ Python 3.13 compatibility with structural pattern matching & Pydantic v2  
 
-## Prerequisites
-- Python 3.7+
-- An API key for Google Gemini 1.5 Flash
-- `pip` for package installation
+---
 
-## Installation
-1. **Clone the repository:**
-    ```bash
-    git clone https://github.com/yourusername/LinguaFlash.git
-    cd LinguaFlash
-    ```
+## ✨ Features
+- `/translate/` API endpoint for text translations  
+- Swagger + Redoc auto-generated documentation  
+- Autodetect source language if not provided  
+- Configurable via `.env`  
+- Clean Gradio UI  
 
-2. **Install dependencies:**
-    ```bash
-    pip install -r requirements.txt
-    ```
+---
 
-3. **Set up the environment variables:**
-    - Create a `.env` file in the root directory.
-    - Add your Google Gemini 1.5 Flash API key:
-    ```plaintext
-    api_key=YOUR_API_KEY_HERE
-    ```
-
-## Usage
-### Running the FastAPI Server
-1. **Navigate to the project directory:**
-    ```bash
-    cd LinguaFlash
-    ```
-
-2. **Start the FastAPI server:**
-    ```bash
-    uvicorn main:app --host 0.0.0.0 --port 8000 --reload
-    ```
-
-### Running the Gradio Interface
-1. **In a new terminal window, navigate to the project directory:**
-    ```bash
-    cd LinguaFlash
-    ```
-
-2. **Start the Gradio interface:**
-    ```bash
-    python app.py
-    ```
-
-### Using Supervisor
-Supervisor can be used to manage both the FastAPI server and the Gradio interface.
-
-1. **Install Supervisor:**
-    ```bash
-    sudo apt-get install supervisor
-    ```
-
-2. **Copy the `supervisord.conf` file to `/etc/supervisor/conf.d/`:**
-    ```bash
-    sudo cp supervisord.conf /etc/supervisor/conf.d/linguaflash.conf
-    ```
-
-3. **Update Supervisor and start the processes:**
-    ```bash
-    sudo supervisorctl update
-    sudo supervisorctl start all
-    ```
-
-## Docker Setup
-You can also run LinguaFlash using Docker. Here's how:
-
-1. **Build the Docker image:**
-    ```bash
-    docker build -t linguaflash .
-    ```
-
-2. **Run the Docker container:**
-    ```bash
-    docker run -d -p 80:80 -p 7860:7860 linguaflash
-    ```
-
-### Dockerfile
-Here is the content of the Dockerfile:
-
-```dockerfile
-# Use an official Python runtime as a parent image
-FROM python:3.9-slim
-
-# Set the working directory
-WORKDIR /app
-
-# Copy the current directory contents into the container
-COPY . /app
-
-# Install any needed packages specified in requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Make port 80 and 7860 available to the world outside this container
-EXPOSE 80
-EXPOSE 7860
-
-# Copy the supervisor configuration file
-COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-
-# Start supervisord 
-CMD ["supervisord"]
+## 📂 Project Structure
+```
+Translator/
+├── main.py             # FastAPI backend
+├── app.py              # Gradio UI
+├── requirements.txt    # Dependencies
+├── .env.example        # Env template
+└── README.md           # Documentation
 ```
 
-## Testing the FastAPI Endpoint
-You can test the FastAPI endpoint using tools like `curl` or Postman. Here's how you can do it using `curl`:
+---
 
-1. **Ensure the FastAPI server is running on port 8000:**
-    ```bash
-    uvicorn main:app --host 0.0.0.0 --port 8000 --reload
-    ```
+## ⚡️ Quickstart
 
-2. **Send a POST request to the `/translate/` endpoint:**
-    ```bash
-    curl -X POST "http://127.0.0.1:8000/translate/" -H "Content-Type: application/json" -d '{"text": "Hello, world!", "target_language": "es"}'
-    ```
+### 1. Clone Repository
+```
+git clone https://github.com/aysxploit/Translator
+cd Translator
+```
 
-3. **Expected Response:**
-    ```json
-    {
-        "translation": "¡Hola, mundo!"
-    }
-    ```
+### 2. Install Dependencies
+```
+pip install -r requirements.txt
+```
 
-## Getting a Google Gemini API Key
-To use the Google Gemini API, you'll need an API key. Here's how to get one:
+### 3. Configure Environment
+`.env` file:
+```
+TRANSLATION_API_URL=https://api.example.com/v1/translate
+TRANSLATION_API_KEY=your_api_key_here
+API_BASE_URL=http://127.0.0.1:8000
+```
 
-1. **Sign in to Google AI Studio:**
-    - Go to the Google AI Studio website and sign in with your Google account.
+### 4. Start Backend
+```
+uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+```
+- Swagger → http://localhost:8000/docs  
+- Redoc → http://localhost:8000/redoc  
 
-2. **Create a New Project or Select an Existing One:**
-    - If you don't have a project, create a new one. If you already have one, select it from the list.
+### 5. Start Frontend
+```
+python app.py
+```
+- UI → http://localhost:7860  
 
-3. **Navigate to the Credentials Section:**
-    - In the left menu, select "APIs & Services" and then "Credentials".
+---
 
-4. **Create a New API Key:**
-    - Click on "Create credentials" and select "API key".
-    - Copy the generated API key and keep it secure.
+## 🛠️ Usage
 
-5. **Add the API Key to Your Project:**
-    - Add the API key to your `.env` file as shown in the Prerequisites section.
+### API Request
+```
+POST /translate/
+```
+```json
+{
+  "text": "Hello, world!",
+  "target_language": "es",
+  "source_language": "en"
+}
+```
 
-## API Endpoint
-### `/translate/`
-- **Method:** POST
-- **Request Body:**
-    ```json
-    {
-        "text": "Hello, world!",
-        "target_language": "es"
-    }
-    ```
-- **Response:**
-    ```json
-    {
-        "translation": "¡Hola, mundo!"
-    }
-    ```
+### API Response
+```json
+{
+  "translation": "¡Hola, mundo!",
+  "detected_source_language": "en",
+  "provider": "external-api"
+}
+```
 
-## Contributing
-Feel free to fork the repository and submit pull requests. For major changes, please open an issue to discuss what you would like to change.
+### Gradio UI
+1. Enter text  
+2. Choose target language (`es`, `fr`, `de`)  
+3. Leave source empty for autodetect or set manually  
+4. Click **Translate**  
 
-## License
-This project is solely developed by aysxploit and licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+---
+
+## 📦 Requirements
+- Python 3.13+  
+- fastapi ≥ 0.115  
+- gradio ≥ 4.44  
+- httpx ≥ 0.27  
+- pydantic ≥ 2.9  
+- uvicorn ≥ 0.30  
+- python-dotenv ≥ 1.0  
+
+---
+
+## 🚀 Tech Highlights
+- Async I/O with `httpx.AsyncClient`  
+- Pattern Matching (`match/case`)  
+- Pydantic v2 schema validation  
+- Gradio Blocks UI  
+
+---
+
+## 📜 License
+MIT License — free to use, modify, and distribute.

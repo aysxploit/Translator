@@ -1,44 +1,83 @@
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
-import google.generativeai as genai
-from dotenv import load_dotenv
+# main.py
+# Compatible with Python 3.13 (pattern matching, type hints, async context managers)
+
+from typing import Optional
+from fastapi import FastAPI, HTTPException, status
+from pydantic import BaseModel, Field, HttpUrl
+import httpx
 import os
+import asyncio
 
-app = FastAPI()
+class Settings(BaseModel):
+    TRANSLATION_API_URL: HttpUrl = Field(..., alias="TRANSLATION_API_URL")
+    TRANSLATION_API_KEY: str = Field(..., alias="TRANSLATION_API_KEY")
+    TIMEOUT_SECONDS: int = 20
 
-# Load the .env file
-load_dotenv()
+    @classmethod
+    def from_env(cls) -> "Settings":
+        return cls(
+            TRANSLATION_API_URL=os.environ["TRANSLATION_API_URL"],
+            TRANSLATION_API_KEY=os.environ["TRANSLATION_API_KEY"],
+            TIMEOUT_SECONDS=int(os.getenv("TIMEOUT_SECONDS", 20)),
+        )
 
-# Access the API token
-api_token = os.getenv('api_key')
+settings = Settings.from_env()
 
-# Configure the generative AI model
-genai.configure(api_key=api_token)
-model = genai.GenerativeModel("gemini-1.5-flash")
+app = FastAPI(
+    title="LinguaFlash (FastAPI)",
+    version="1.0.0",
+    description="Translation API wrapper (async, Python 3.13)."
+)
 
-# Define a Pydantic model for the request body
-class TranslationRequest(BaseModel):
+class TranslateRequest(BaseModel):
     text: str
     target_language: str
+    source_language: Optional[str] = None
 
-@app.post("/translate/")
-async def translate_text(request: TranslationRequest):
+class TranslateResponse(BaseModel):
+    translation: str
+    detected_source_language: Optional[str] = None
+    provider: str = "external-api"
+
+async def call_translation_api(payload: dict) -> dict:
+    headers = {
+        "Authorization": f"Bearer {settings.TRANSLATION_API_KEY}",
+        "Content-Type": "application/json",
+    }
+    async with httpx.AsyncClient(timeout=settings.TIMEOUT_SECONDS) as client:
+        resp = await client.post(str(settings.TRANSLATION_API_URL), json=payload, headers=headers)
+        if resp.is_error:
+            raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=f"Provider error: {resp.text}")
+        return resp.json()
+
+@app.post("/translate/", response_model=TranslateResponse)
+async def translate(req: TranslateRequest):
+    if not req.text.strip():
+        raise HTTPException(status_code=400, detail="text must not be empty")
+
+    payload = {"input": req.text, "target_language": req.target_language}
+    if req.source_language:
+        payload["source_language"] = req.source_language
+
     try:
-        payload = {
-            "input": request.text,
-            "target_language": request.target_language
-        }
-
-        response = model.generate_content(f"Translate '{request.text}' to {request.target_language} YOU MUST ONLY TYPE THE TRANSLATION if no translation available, type the closest indirect translation and with newline write: Note: this is a closest indirect translation")
-
-        # Extract translation from the response
-        translation = response.text
-
-        return {"translation": translation}
+        result = await call_translation_api(payload)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"internal error: {e}")
 
-# Run the app
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    # Structural pattern matching (Python 3.10+ feature)
+    match result:
+        case {"translation": str(trans)}:
+            translation = trans
+        case {"translatedText": str(trans)}:
+            translation = trans
+        case {"data": {"translation": str(trans)}}:
+            translation = trans
+        case _:
+            translation = str(result)
+
+    detected = result.get("detected_source_language") or result.get("detectedLanguage")
+    return TranslateResponse(translation=translation, detected_source_language=detected)
+
+@app.get("/health")
+async def health():
+    return {"status": "ok"}
