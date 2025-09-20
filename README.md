@@ -121,4 +121,4 @@ POST /translate/
 ---
 
 ## 📜 License
-MIT License — free to use, modify, and distribute.
+Developed by aysxploit under MIT License.
