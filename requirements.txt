@@ -1,4 +1,6 @@
-fastapi
+# Install Required Packages
+
+fastapi 
 pydantic
 httpx
 python-dotenv
