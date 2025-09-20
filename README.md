@@ -174,4 +174,4 @@ To use the Google Gemini API, you'll need an API key. Here's how to get one:
 Feel free to fork the repository and submit pull requests. For major changes, please open an issue to discuss what you would like to change.
 
 ## License
-This project is THis project is solely developed by aysxploit and licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is solely developed by aysxploit and licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
