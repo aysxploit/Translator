@@ -1,49 +1,124 @@
-# ======================================================================
-# Author        : Ayesha Imran 
-# ======================================================================
+# 🌍 LinguaFlash  
+**Translation API & UI — Powered by Python 3.13**
 
+![Python](https://img.shields.io/badge/Python-3.13-blue?style=for-the-badge&logo=python)  
+![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-green?style=for-the-badge&logo=fastapi)  
+![Gradio](https://img.shields.io/badge/Gradio-4.44+-orange?style=for-the-badge&logo=gradio)  
+![License](https://img.shields.io/badge/License-MIT-black?style=for-the-badge)
 
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
-import google.generativeai as genai
-from dotenv import load_dotenv
-import os
+A minimal, async-ready translation service with:  
+🚀 FastAPI backend for API requests  
+🎨 Gradio frontend for real-time UI  
+⚡ Python 3.13 compatibility with structural pattern matching & Pydantic v2  
 
-app = FastAPI()
+---
 
-# Load the .env file
-load_dotenv()
+## ✨ Features
+- `/translate/` API endpoint for text translations  
+- Swagger + Redoc auto-generated documentation  
+- Autodetect source language if not provided  
+- Configurable via `.env`  
+- Clean Gradio UI  
 
-# Access the API token
-api_token = os.getenv('api_key')
+---
 
-# Configure the generative AI model
-genai.configure(api_key=api_token)
-model = genai.GenerativeModel("gemini-1.5-flash")
+## 📂 Project Structure
+```
+Translator/
+├── main.py             # FastAPI backend
+├── app.py              # Gradio UI
+├── requirements.txt    # Dependencies
+├── .env.example        # Env template
+└── README.md           # Documentation
+```
 
-# Define a Pydantic model for the request body
-class TranslationRequest(BaseModel):
-    text: str
-    target_language: str
+---
 
-@app.post("/translate/")
-async def translate_text(request: TranslationRequest):
-    try:
-        payload = {
-            "input": request.text,
-            "target_language": request.target_language
-        }
+## ⚡️ Quickstart
 
-        response = model.generate_content(f"Translate '{request.text}' to {request.target_language} YOU MUST ONLY TYPE THE TRANSLATION if no translation available, type the closest indirect translation and with newline write: Note: this is a closest indirect translation")
+### 1. Clone Repository
+```
+git clone https://github.com/aysxploit/Translator
+cd Translator
+```
 
-        # Extract translation from the response
-        translation = response.text
+### 2. Install Dependencies
+```
+pip install -r requirements.txt
+```
 
-        return {"translation": translation}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+### 3. Configure Environment
+`.env` file:
+```
+TRANSLATION_API_URL=https://api.example.com/v1/translate
+TRANSLATION_API_KEY=your_api_key_here
+API_BASE_URL=http://127.0.0.1:8000
+```
 
-# Run the app
-if _name_ == "_main_":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+### 4. Start Backend
+```
+uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+```
+- Swagger → http://localhost:8000/docs  
+- Redoc → http://localhost:8000/redoc  
+
+### 5. Start Frontend
+```
+python app.py
+```
+- UI → http://localhost:7860  
+
+---
+
+## 🛠️ Usage
+
+### API Request
+```
+POST /translate/
+```
+```json
+{
+  "text": "Hello, world!",
+  "target_language": "es",
+  "source_language": "en"
+}
+```
+
+### API Response
+```json
+{
+  "translation": "¡Hola, mundo!",
+  "detected_source_language": "en",
+  "provider": "external-api"
+}
+```
+
+### Gradio UI
+1. Enter text  
+2. Choose target language (`es`, `fr`, `de`)  
+3. Leave source empty for autodetect or set manually  
+4. Click **Translate**  
+
+---
+
+## 📦 Requirements
+- Python 3.13+  
+- fastapi ≥ 0.115  
+- gradio ≥ 4.44  
+- httpx ≥ 0.27  
+- pydantic ≥ 2.9  
+- uvicorn ≥ 0.30  
+- python-dotenv ≥ 1.0  
+
+---
+
+## 🚀 Tech Highlights
+- Async I/O with `httpx.AsyncClient`  
+- Pattern Matching (`match/case`)  
+- Pydantic v2 schema validation  
+- Gradio Blocks UI  
+
+---
+
+## 📜 License
+MIT License — free to use, modify, and distribute.
