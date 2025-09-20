@@ -1,0 +1,8 @@
+fastapi
+pydantic
+httpx
+python-dotenv
+google-generativeaid
+gradio
+uvicorn
+dash
