@@ -1,31 +1,38 @@
+# app.py
+# Gradio UI for Python 3.13
+import asyncio
+import httpx
+import os
 import gradio as gr
-import requests
 
-def translate(text, target_language):
-    try:
-        response = requests.post(
-            "http://127.0.0.1:8000/translate/",
-            json={"text": text, "target_language": target_language}
-        )
+API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
+TIMEOUT_SECONDS = int(os.getenv("TIMEOUT_SECONDS", "15"))
 
-        if response.status_code == 200:
-            return response.json().get("translation")
-        else:
-            return "Translation failed"
-    except Exception as e:
-        return str(e)
+async def translate_async(text: str, target_language: str, source_language: str | None = None) -> str:
+    url = f"{API_BASE_URL.rstrip('/')}/translate/"
+    payload = {"text": text, "target_language": target_language}
+    if source_language:
+        payload["source_language"] = source_language
 
-iface = gr.Interface(
-    fn=translate,
-    inputs=[
-        gr.Textbox(lines=2, placeholder="Enter text to translate..."),
-        gr.Textbox(lines=1, placeholder="Enter target language (e.g., 'en', 'es', 'fr', etc.)")
-    ],
-    outputs=gr.Textbox(lines=2, placeholder="Translation appears here..."),
-    title="Real-Time Language Translation Tool",
-    description="Translate text from one language to another using Google Gemini 1.5 Flash.",
-    live=False
-)
+    async with httpx.AsyncClient(timeout=TIMEOUT_SECONDS) as client:
+        resp = await client.post(url, json=payload)
+        resp.raise_for_status()
+        return resp.json().get("translation", str(resp.json()))
 
-if __name__ == "__main__":
-    iface.launch(server_name="0.0.0.0", server_port=7860)
+def translate_sync(text: str, target_language: str, source_language: str | None = None) -> str:
+    return asyncio.run(translate_async(text, target_language, source_language))
+
+with gr.Blocks(title="LinguaFlash UI") as demo:
+    gr.Markdown("# LinguaFlash — Translation App (Python 3.13)")
+    with gr.Row():
+        with gr.Column(scale=4):
+            txt = gr.Textbox(label="Text", lines=6)
+            source = gr.Textbox(label="Source language (optional)")
+            target = gr.Textbox(label="Target language", value="es")
+            btn = gr.Button("Translate")
+        with gr.Column(scale=6):
+            out = gr.Textbox(label="Translation", interactive=False, lines=6)
+    btn.click(fn=translate_sync, inputs=[txt, target, source], outputs=[out])
+
+if _name_ == "_main_":
+    demo.launch(server_name="0.0.0.0", server_port=7860, share=False)
